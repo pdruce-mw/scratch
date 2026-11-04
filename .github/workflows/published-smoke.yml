@@ -2,6 +2,9 @@
 name: Published smoke test
 
 on:
+    push:
+        branches:
+            - ati-public-tests
     schedule:
         - cron: "0 6 * * *"
     workflow_dispatch:
