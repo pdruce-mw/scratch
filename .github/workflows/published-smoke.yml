@@ -36,12 +36,20 @@ jobs:
                   products: Simulink
                   cache: true
 
+            - name: Start MATLAB as the installer does
+              run: |
+                  set +e
+                  timeout --kill-after=10s 180 matlab -nosplash -nodesktop -logfile matlab-start.log -r "disp(version); exit(0);"
+                  echo "MATLAB exit code: $?"
+                  cat matlab-start.log || echo "MATLAB wrote no log."
+
             - name: Download the latest installer release
               run: |
                   curl --fail --location --silent --show-error --output agentic-toolkit-installer "$INSTALLER_URL"
                   chmod +x agentic-toolkit-installer
 
             - name: Install
+              timeout-minutes: 10
               run: ./agentic-toolkit-installer install --non-interactive --disable-telemetry --log-folder "$LOG_FOLDER"
 
             - name: Configure
@@ -54,8 +62,11 @@ jobs:
               run: ./agentic-toolkit-installer uninstall --non-interactive --log-folder "$LOG_FOLDER"
 
             - name: Keep the installer logs
-              if: failure()
+              if: failure() || cancelled()
               uses: actions/upload-artifact@v4
               with:
                   name: installer-logs
-                  path: ${{ env.LOG_FOLDER }}
+                  path: |
+                      ${{ env.LOG_FOLDER }}
+                      /tmp/agentic-toolkit-installer-mltbx-*/*.log
+                      matlab-start.log
