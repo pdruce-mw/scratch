@@ -22,7 +22,7 @@ jobs:
             MW_AGENTIC_TOOLKIT_INSTALLER_GIT_TOKEN: ${{ github.token }}
         steps:
             - name: Set up Node.js
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v7
               with:
                   node-version: 22
 
@@ -63,7 +63,7 @@ jobs:
 
             - name: Keep the installer logs
               if: failure() || cancelled()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: installer-logs
                   path: |
