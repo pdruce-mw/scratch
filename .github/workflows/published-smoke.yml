@@ -1,0 +1,51 @@
+# Copyright 2026 The MathWorks, Inc.
+name: Published smoke test
+
+on:
+    schedule:
+        - cron: "0 6 * * *"
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    smoke:
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        env:
+            INSTALLER_URL: https://github.com/matlab/agentic-toolkit-installer/releases/latest/download/agentic-toolkit-installer-linux-x64
+            LOG_FOLDER: ${{ github.workspace }}/installer-logs
+            MW_AGENTIC_TOOLKIT_INSTALLER_GIT_TOKEN: ${{ github.token }}
+        steps:
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            - name: Install the agent CLIs
+              run: npm install --global @anthropic-ai/claude-code @openai/codex @github/copilot
+
+            - name: Download the latest installer release
+              run: |
+                  curl --fail --location --silent --show-error --output agentic-toolkit-installer "$INSTALLER_URL"
+                  chmod +x agentic-toolkit-installer
+
+            - name: Install
+              run: ./agentic-toolkit-installer install --non-interactive --disable-telemetry --log-folder "$LOG_FOLDER"
+
+            - name: Configure
+              run: ./agentic-toolkit-installer configure --non-interactive --log-folder "$LOG_FOLDER"
+
+            - name: Status
+              run: ./agentic-toolkit-installer status --log-folder "$LOG_FOLDER"
+
+            - name: Uninstall
+              run: ./agentic-toolkit-installer uninstall --non-interactive --log-folder "$LOG_FOLDER"
+
+            - name: Keep the installer logs
+              if: failure()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: installer-logs
+                  path: ${{ env.LOG_FOLDER }}
