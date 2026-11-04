@@ -26,6 +26,13 @@ jobs:
             - name: Install the agent CLIs
               run: npm install --global @anthropic-ai/claude-code @openai/codex @github/copilot
 
+            - name: Set up MATLAB
+              uses: matlab-actions/setup-matlab@v3
+              with:
+                  release: latest
+                  products: Simulink
+                  cache: true
+
             - name: Download the latest installer release
               run: |
                   curl --fail --location --silent --show-error --output agentic-toolkit-installer "$INSTALLER_URL"
