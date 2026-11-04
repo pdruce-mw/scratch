@@ -62,3 +62,23 @@ jobs:
                   path: |
                       ${{ env.LOG_FOLDER }}
                       /tmp/agentic-toolkit-installer-mltbx-*/*.log
+
+    report:
+        needs: smoke
+        if: always() && needs.smoke.result != 'skipped'
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            issues: write
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
+
+            - name: Open, comment on, or close the failure issue
+              uses: actions/github-script@v9
+              env:
+                  SMOKE_RESULT: ${{ needs.smoke.result }}
+              with:
+                  script: |
+                      const reportSmokeResult = require('./.github/scripts/src/report-smoke-result.js');
+                      return reportSmokeResult({ github, context, core, result: process.env.SMOKE_RESULT });
