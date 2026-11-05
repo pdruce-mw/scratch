@@ -36,6 +36,14 @@ jobs:
                   products: Simulink
                   cache: true
 
+            - name: Provide the MATLAB license
+              env:
+                  MATLAB_LICENSE: ${{ secrets.MATLAB_LICENSE }}
+              run: |
+                  : "${MATLAB_LICENSE:?Set the MATLAB_LICENSE secret to the content of a MATLAB license file}"
+                  printf '%s\n' "$MATLAB_LICENSE" > "$RUNNER_TEMP/matlab.lic"
+                  echo "MLM_LICENSE_FILE=$RUNNER_TEMP/matlab.lic" >> "$GITHUB_ENV"
+
             - name: Download the installer built from main
               run: |
                   curl --fail --location --silent --show-error --output agentic-toolkit-installer "$INSTALLER_URL"
