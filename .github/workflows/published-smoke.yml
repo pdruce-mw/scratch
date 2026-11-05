@@ -17,7 +17,7 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 30
         env:
-            INSTALLER_URL: https://github.com/matlab/agentic-toolkit-installer/releases/latest/download/agentic-toolkit-installer-linux-x64
+            INSTALLER_URL: ${{ github.server_url }}/${{ github.repository }}/raw/${{ github.sha }}/installer/agentic-toolkit-installer-linux-x64
             LOG_FOLDER: ${{ github.workspace }}/installer-logs
             MW_AGENTIC_TOOLKIT_INSTALLER_GIT_TOKEN: ${{ github.token }}
         steps:
@@ -36,7 +36,7 @@ jobs:
                   products: Simulink
                   cache: true
 
-            - name: Download the latest installer release
+            - name: Download the installer built from main
               run: |
                   curl --fail --location --silent --show-error --output agentic-toolkit-installer "$INSTALLER_URL"
                   chmod +x agentic-toolkit-installer
@@ -53,6 +53,16 @@ jobs:
 
             - name: Uninstall
               run: ./agentic-toolkit-installer uninstall --non-interactive --log-folder "$LOG_FOLDER"
+
+            - name: Check how MATLAB is licensed
+              if: always()
+              run: |
+                  set +e
+                  env | cut -d= -f1 | grep '^MLM_' || echo "No MLM_ variables are set."
+                  timeout 5m matlab -batch "disp(version)"
+                  echo "matlab -batch exit code: $?"
+                  MW_BATCH_LICENSING_ONLINE=true timeout 5m matlab-batch "disp(version)"
+                  echo "matlab-batch exit code: $?"
 
             - name: Keep the installer logs
               if: failure() || cancelled()
